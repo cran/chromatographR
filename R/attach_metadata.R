@@ -19,6 +19,12 @@
 #' @export attach_metadata
 
 attach_metadata <- function(peak_table, metadata, column){
+  if (any(grepl("tbl", class(metadata)))){
+    metadata <- as.data.frame(metadata)
+  }
+  if (!inherits(metadata, "data.frame")){
+    stop("Please provide metadata as a data.frame")
+  }
   if (!(column %in% colnames(metadata)))
     stop(paste0("Column, ", column, ", is not found."))
   if (sum((duplicated(metadata[,column]))) > 0)
@@ -62,9 +68,8 @@ gather_reference_spectra <- function(peak_table, chrom_list,
   if (!inherits(peak_table, "peak_table"))
     stop(paste("Provided peak_table object must be of class 'peak_table'."))
   if (missing(chrom_list)){
-    try.out <- try(chrom_list <- get(peak_table$args["chrom_list"]))
-    if (inherits(try.out, "try-error")) stop("Chromatograms not found!")
-  }
+    chrom_list <- get_chrom_list(peak_table)
+  } else get_chrom_list(peak_table, chrom_list)
   ref <- match.arg(ref, c("max.cor", "max.int"))
   X<-colnames(peak_table$tab)
   if (ref=="max.cor"){
@@ -74,7 +79,7 @@ gather_reference_spectra <- function(peak_table, chrom_list,
                        scale_spectrum = TRUE)
     })
     sp.ref <- sapply(seq_along(sp.l), function(i){
-      sp.l[[i]][,which.max(colMeans(cor(sp.l[[i]][,which(apply((sp.l[[i]]),2,sd)!=0)])))]})
+      sp.l[[i]][,which.max(colMeans(cor(sp.l[[i]][,which(apply((sp.l[[i]]),2,sd)!=0), drop=FALSE])))]})
   } else {
     sp.ref <- sapply(colnames(peak_table$tab), function(pk){
       plot_spectrum(loc = pk, peak_table, chrom_list, plot_trace=FALSE,
@@ -158,9 +163,8 @@ normalize_data <- function(peak_table, column, chrom_list,
     return(peak_table)
   } else if (what == "chrom_list"){
     if (missing(chrom_list)){
-      chrom_list <- try(get(peak_table$args["chrom_list"]))
-      if (inherits(chrom_list, "try-error")) stop("Chromatograms not found!")
-    }
+      chrom_list <- get_chrom_list(peak_table)
+    } else get_chrom_list(peak_table, chrom_list)
     if (mean(elementwise.all.equal(names(chrom_list), rownames(peak_table$tab))) < 1)
       stop("Names of chromatograms do not match the peak table.")
     chrom_list <- lapply(seq_len(nrow(peak_table$tab)), function(samp){

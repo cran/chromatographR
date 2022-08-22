@@ -1,7 +1,7 @@
 Type: Package
 Package: chromatographR
-Title: Import and Analyze HPLC-DAD/UV Data
-Version: 0.4.1
+Title: Chromatographic Data Analysis Toolset
+Version: 0.4.3
 Authors@R: 
     person("Ethan", "Bass", , "ethanbass@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-6175-6739"))
@@ -28,17 +28,17 @@ Depends: R (>= 3.5.0)
 Imports: chromConverter, dynamicTreeCut, fastcluster, graphics,
         grDevices, lattice, methods, minpack.lm, parallel, ptw,
         pvclust, scales, smoother, stats, utils
-Suggests: knitr, rmarkdown, spelling, testthat (>= 3.0.0), VPdtw
+Suggests: knitr, rmarkdown, spelling, testthat (>= 3.0.0), vdiffr,
+        VPdtw
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en-US
 LazyData: true
 LazyDataCompression: xz
-RoxygenNote: 7.2.0
-Additional_repositories: https://ethanbass.github.io/drat/
+RoxygenNote: 7.2.1
 NeedsCompilation: no
-Packaged: 2022-05-18 21:26:28 UTC; ethanbass
+Packaged: 2022-08-22 15:51:16 UTC; ethanbass
 Author: Ethan Bass [aut, cre] (<https://orcid.org/0000-0002-6175-6739>)
 Repository: CRAN
-Date/Publication: 2022-05-19 07:40:02 UTC
+Date/Publication: 2022-08-22 19:00:05 UTC

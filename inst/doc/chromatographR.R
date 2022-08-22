@@ -11,9 +11,9 @@ suppressMessages(require(chromatographR, quiet=TRUE))
 #  load_chroms(paths = path, format.in="csv")
 #  
 #  # multiple folders
-#  path = 'foo'
+#  path = 'foo' # path to parent directory
 #  folders <- list.files(path = path, pattern = "EXPORT3D")
-#  dat <- load_chroms(folders)
+#  dat <- read_chroms(folders, format_in = "csv")
 
 ## ---- data--------------------------------------------------------------------
 data(Sa)
@@ -28,11 +28,11 @@ matplot(x=tpoints, y=Sa[[i]][,lambda],
 matplot(x=tpoints, y = ptw::baseline.corr(Sa[[i]][,lambda],p=.001,lambda=1e5),
        type='l', add = T, col='blue', lty = 3)
 
-## ---- choosing dimensions-----------------------------------------------------
+## ---- preprocessing, eval=T---------------------------------------------------
+# choose dimensions for interpolation
 new.ts <- seq(10,18.66,by=.01) # choose time-points
 new.lambdas <- seq(200, 318, by = 2) # choose wavelengths
 
-## ---- preprocessing, eval=T---------------------------------------------------
 dat.pr <- preprocess(Sa, dim1=new.ts, dim2=new.lambdas,
            parallel=F, p=.001, lambda=1e5)
 
@@ -60,7 +60,7 @@ for (i in 1:length(dat.pr)){
 legend("topright", legend="raw", bty = "n")
 
 ## ---- eval=FALSE--------------------------------------------------------------
-#  install.packages("VPdtw", repos="https://ethanbass.github.io/drat")
+#  install.packages("VPdtw")
 #  warp <- correct_rt(chrom_list=dat.pr, alg="vpdtw", lambda="210", what="corrected.values")
 
 ## ---- get_peaks, message=F, warning=F-----------------------------------------

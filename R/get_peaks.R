@@ -9,6 +9,9 @@
 #' function is fit to the signal using \code{\link{fit_peaks}}). The area is then
 #' calculated using a trapezoidal approximation.
 #' 
+#' The \code{sd}, \code{FWHM}, \code{tau}, and \code{area} are returned in units
+#' determined by \code{time.units}. By defaults the units are in minutes.
+#' 
 #' @aliases get_peaks
 #' @importFrom stats median
 #' @param chrom_list A list of profile matrices, each of the same dimensions
@@ -20,6 +23,9 @@
 #' @param sd.max Maximum width (standard deviation) for peaks. Defaults to 50.
 #' @param max.iter Maximum number of iterations for non-linear least squares
 #' in \code{\link{fit_peaks}}.
+#' @param time.units Units of \code{sd}, \code{FWHM}, \code{area}, and \code{tau}
+#' (if applicable). Options are minutes \code{"min"}, seconds (\code{"s"}, or 
+#' milliseconds \code{"ms"}.
 #' @param \dots Additional arguments to \code{\link{find_peaks}}.
 #' @return The result is an S3 object of class \code{peak_list}, containing a nested
 #' list of data.frames containing information about the peaks fitted for each
@@ -40,19 +46,41 @@
 #' Wehrens, R., Carvalho, E., Fraser, P.D. 2015. Metabolite profiling in
 #' LC–DAD using multivariate curve resolution: the alsace package for R. \emph{
 #' Metabolomics} \bold{11}:143-154. \doi{10.1007/s11306-014-0683-5}
+#' 
+#' #' Lan, K. & Jorgenson, J. W. 2001. A hybrid of exponential and gaussian
+#' functions as a simple model of asymmetric chromatographic peaks. \emph{Journal of
+#' Chromatography A} \bold{915}:1-13. \doi{10.1016/S0021-9673(01)00594-5}.
+#'
+#' Naish, P. J. & Hartwell, S. 1988. Exponentially Modified Gaussian functions - A
+#' good model for chromatographic peaks in isocratic HPLC? \emph{Chromatographia},
+#' /bold{26}: 285-296. \doi{10.1007/BF02268168}.
 #' @examplesIf interactive()
 #' data(Sa_pr)
 #' pks <- get_peaks(Sa_pr, lambdas = c('210'), sd.max=50, fit="egh")
+#' @seealso \code{\link{find_peaks}}, \code{\link{fit_peaks}}
 #' @export get_peaks
 
-get_peaks <- function (chrom_list, lambdas, fit = c("egh", "gaussian", "raw"),
-                       sd.max=50, max.iter=100, ...){
+get_peaks <- function(chrom_list, lambdas, fit = c("egh", "gaussian", "raw"),
+                       sd.max=50, max.iter=100, time.units = c("min", "s", "ms"), ...){
+  time.units <- match.arg(time.units, c("min", "s", "ms"))
+  tfac <- switch(time.units, "min" = 1, "s" = 60, "ms" = 60*1000)
   fit <- match.arg(fit, c("egh", "gaussian", "raw"))
+  chrom_list_string <- deparse(substitute(chrom_list))
+  if (class(chrom_list)[1] == "matrix")
+    chrom_list <- list(chrom_list)
+  if (missing(lambdas)){
+    if (ncol(chrom_list[[1]]) == 1){
+      lambdas <- colnames(chrom_list[[1]])
+    } else stop("Wavelengths (`lambdas`) must be provided.")
+  }
   if (is.numeric(lambdas)){
     lambdas <- as.character(lambdas)
   }
+  if (is.null(names(chrom_list))){
+    warning("Sample names not found. It is recommended to include names for your samples.", immediate. = TRUE)
+    names(chrom_list) <- seq_along(chrom_list)
+  }
   peaks<-list()
-  chrom_list_str <- deparse(substitute(chrom_list))
   chrom_list <- lapply(chrom_list, function(c_mat) c_mat[,lambdas, drop=FALSE])
   result <- lapply(seq_along(chrom_list), function(sample){
     suppressWarnings(ptable <- lapply(lambdas, function(lambda){
@@ -74,15 +102,16 @@ get_peaks <- function (chrom_list, lambdas, fit = c("egh", "gaussian", "raw"),
     x <- lambda
     x[, c('rt', 'start', 'end')] <- sapply(c('rt', 'start', 'end'),
                                            function(j) timepoints[x[,j]])
-    x[, c('sd', 'FWHM')] <- x[, c('sd', 'FWHM')] * tdiff
-    if (!is.null(x$tau)){x[, c('tau')] <- x[, c('tau')] * tdiff} 
+    x[, c('sd', 'FWHM', 'area')] <- x[, c('sd', 'FWHM', 'area')] * tdiff * tfac
+    if (!is.null(x$tau)){x[, c('tau')] <- x[, c('tau')] * tdiff * tfac} 
     x
   }))
   structure(result,
-            chrom_list = chrom_list_str,
-            lambdas = deparse(substitute(lambdas)), fit=fit, sd.max=sd.max,
-            max.iter=max.iter,
-            class="peak_list")
+            chrom_list = chrom_list_string,
+            lambdas = lambdas, fit=fit, sd.max=sd.max,
+            max.iter = max.iter,
+            time.units = time.units,
+            class = "peak_list")
 }
 
 #' Plot fitted peak shapes.
@@ -117,8 +146,10 @@ get_peaks <- function (chrom_list, lambdas, fit = c("egh", "gaussian", "raw"),
 plot.peak_list <- function(x, ..., chrom_list=NULL, index=1, lambda=NULL,
                        points=FALSE, ticks=FALSE, a=0.5, color=NULL,
                        cex.points=0.5){
+  time.units <- attributes(x)$time.units
+  tfac <- switch(time.units, "min" = 1, "s" = 1/60, "ms" = 1/60000)
   if (is.null(chrom_list)){
-    chrom_list <- get(attr(x, "chrom_list"))
+    chrom_list <- get_chrom_list(x)
   }
   if (is.null(lambda)){
     lambda <- names(x[[1]])[1]
@@ -126,7 +157,9 @@ plot.peak_list <- function(x, ..., chrom_list=NULL, index=1, lambda=NULL,
   if (!(lambda %in% names(x[[1]]))){
     stop('Error: lambda must match one of the wavelengths in your peak list')
   }
-  if (is.numeric(lambda)){lambda <- as.character(lambda)}
+  if (is.numeric(lambda)){
+    lambda <- as.character(lambda)
+  }
   new.ts <- as.numeric(rownames(chrom_list[[1]]))
   y <- chrom_list[[index]][,lambda]
   pks <- data.frame(x[[index]][[lambda]])
@@ -152,13 +185,14 @@ plot.peak_list <- function(x, ..., chrom_list=NULL, index=1, lambda=NULL,
     peak.loc<-seq.int((pks$start[i]),(pks$end[i]), by = res)
       if (fit == "gaussian"){
         yvals <- gaussian(peak.loc, center=pks$rt[i],
-                          width=pks$sd[i],height = pks$height[i])
+                          width=pks$sd[i]*tfac, height = pks$height[i])
         if (is.null(color))
           color <- "red"
       }
       else if (fit == "egh"){
-        yvals <- egh(x=peak.loc, center=pks$rt[i],
-                     width=pks$sd[i], height = pks$height[i], tau=pks$tau[i])
+        yvals <- egh(x = peak.loc, center = pks$rt[i],
+                     width=pks$sd[i]*tfac, height = pks$height[i],
+                     tau=pks$tau[i]*tfac)
         if (is.null(color))
           color <- "purple"
       }
@@ -167,8 +201,8 @@ plot.peak_list <- function(x, ..., chrom_list=NULL, index=1, lambda=NULL,
         if (is.null(color))
           color <- "hotpink"
       }
-      sapply(1:(length(peak.loc)-1), function(i){
-        polygon(peak.loc[c(i,i,(i+1), (i+1))], c(0,yvals[i:(i+1)], 0),
+      sapply(1:(length(peak.loc) - 1), function(i){
+        polygon(peak.loc[c(i, i, (i+1), (i+1))], c(0, yvals[i:(i+1)], 0),
                 col=alpha(color, a), lty=3, border = NA)
       })
   }

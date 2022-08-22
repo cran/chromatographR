@@ -10,7 +10,7 @@ correct_rt(
   models = NULL,
   reference = "best",
   alg = c("ptw", "vpdtw"),
-  what = c("models", "corrected.values"),
+  what = c("corrected.values", "models"),
   init.coef = c(0, 1, 0),
   n.traces = NULL,
   n.zeros = 0,
@@ -33,8 +33,8 @@ correct_rt(
 \item{reference}{Index of the sample that is to be considered the reference
 sample.}
 
-\item{alg}{algorithm to use: parametric time warping(\code{ptw}) or variable
-penalty dynamic time warping \code{vpdtw}.}
+\item{alg}{algorithm to use: parametric time warping (\code{ptw}) or variable
+penalty dynamic time warping (\code{vpdtw}).}
 
 \item{what}{What to return: either the 'corrected.values' (useful for visual
 inspection) or the warping 'models' (for further programmatic use).}
@@ -51,8 +51,9 @@ inspection) or the warping 'models' (for further programmatic use).}
 
 \item{plot}{Logical. Whether to plot alignment.}
 
-\item{penalty}{Divisor for dilation calculated by \code{\link[VPdtw]{dilation}}.
-Adjusts penalty for variable penalty dynamic time warping.}
+\item{penalty}{The penalty for \code{\link[VPdtw]{VPdtw}} is calculated by
+dividing the \code{\link[VPdtw]{dilation}} by the number provided by this
+argument. Thus, a lower number allows more warping to occur. Defaults to 5.}
 
 \item{maxshift}{Integer. Maximum allowable shift for \code{\link[VPdtw]{VPdtw}}.}
 
@@ -67,14 +68,13 @@ A list of \code{ptw} objects or a list of warped absorbance profiles,
 depending on the value of the \code{what} argument.
 }
 \description{
-Corrects retention time differences using parametric time warping, as
+Aligns chromatograms using parametric time warping, as
 implemented in \code{\link[ptw]{ptw}}, or variable penalty dynamic
 time warping, as implemented in \code{\link[VPdtw]{VPdtw}}.
 }
 \details{
 To use variable penalty dynamic time warping, the \code{VPdtw} package must
-be manually installed since it's no longer available from CRAN: \code{
-install.packages('VPdtw', repos='https://ethanbass.github.io/drat/')}.
+be manually installed: \code{install.packages('VPdtw')}.
 }
 \note{
 Adapted from
@@ -91,8 +91,8 @@ warp <- correct_rt(chrom_list = Sa_pr, models = warping.models)
 \references{
 \itemize{
 \item Clifford, D., Stone, G., Montoliu, I., Rezzi, S., Martin, F. P., Guy, P.,
-... & Kochhar, S. 2009. Alignment using variable penalty dynamic time warping.
-\emph{Analytical chemistry}, \bold{81(3)}:1000-1007. \doi{10.1021/ac802041e}.
+Bruce, S., & Kochhar, S. 2009. Alignment using variable penalty dynamic time
+warping. \emph{Analytical chemistry}, \bold{81(3)}:1000-1007. \doi{10.1021/ac802041e}.
 \item Clifford, D., & Stone, G. 2012. Variable Penalty Dynamic Time Warping Code
 for Aligning Mass Spectrometry Chromatograms in R. \emph{Journal of
 Statistical Software}, \bold{47(8)}:1-17. \doi{10.18637/jss.v047.i08}.

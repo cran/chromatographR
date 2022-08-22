@@ -1,4 +1,5 @@
 ALS
+ARW
 Afsar
 Agilent
 Bioinformatics
@@ -9,10 +10,15 @@ Carvalho
 ChemStation
 Chromatograms
 Chromatographia
+Chromatographic
+Chromeleon
 DTW
 DuffyTools
 Eilers
+Entab
+FID
 FWHM
+GC
 HPLC
 Hartwell
 Hur
@@ -21,6 +27,7 @@ Kochhar
 Lan
 MCR
 MassHunter
+Maxmimum
 Metabolomics
 Montoliu
 Naish
@@ -35,10 +42,11 @@ Pvclust
 RAMClust
 Reproducibility
 Rezzi
-Sa
 Shimodaira
 Solidago
 Spectrometry
+Thermo
+Toolset
 VIS
 VPdtw
 WCC
@@ -51,8 +59,10 @@ au
 bioinformatics
 btv
 chrom
+chromConverter
 chromatogram
 chromatograms
+chromatograph
 chromatographic
 correctRT
 devtools
@@ -67,6 +77,7 @@ https
 isocratic
 jss
 matlab
+metacran
 parsers
 pearson
 pre
@@ -80,4 +91,3 @@ terpconnect
 toh
 umd
 unwarped
-vpdtw

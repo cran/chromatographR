@@ -10,6 +10,7 @@ get_peaks(
   fit = c("egh", "gaussian", "raw"),
   sd.max = 50,
   max.iter = 100,
+  time.units = c("min", "s", "ms"),
   ...
 )
 }
@@ -27,6 +28,10 @@ trapezoidal integration directly on the raw data without fitting a peak shape.}
 
 \item{max.iter}{Maximum number of iterations for non-linear least squares
 in \code{\link{fit_peaks}}.}
+
+\item{time.units}{Units of \code{sd}, \code{FWHM}, \code{area}, and \code{tau}
+(if applicable). Options are minutes \code{"min"}, seconds (\code{"s"}, or 
+milliseconds \code{"ms"}.}
 
 \item{\dots}{Additional arguments to \code{\link{find_peaks}}.}
 }
@@ -52,6 +57,9 @@ of the specified chromatographic traces (function \code{\link{find_peaks}}).
 At the given positions, an exponential-gaussian hybrid (or regular gaussian)
 function is fit to the signal using \code{\link{fit_peaks}}). The area is then
 calculated using a trapezoidal approximation.
+
+The \code{sd}, \code{FWHM}, \code{tau}, and \code{area} are returned in units
+determined by \code{time.units}. By defaults the units are in minutes.
 }
 \note{
 The function is adapted from the
@@ -69,6 +77,17 @@ pks <- get_peaks(Sa_pr, lambdas = c('210'), sd.max=50, fit="egh")
 Wehrens, R., Carvalho, E., Fraser, P.D. 2015. Metabolite profiling in
 LC–DAD using multivariate curve resolution: the alsace package for R. \emph{
 Metabolomics} \bold{11}:143-154. \doi{10.1007/s11306-014-0683-5}
+
+#' Lan, K. & Jorgenson, J. W. 2001. A hybrid of exponential and gaussian
+functions as a simple model of asymmetric chromatographic peaks. \emph{Journal of
+Chromatography A} \bold{915}:1-13. \doi{10.1016/S0021-9673(01)00594-5}.
+
+Naish, P. J. & Hartwell, S. 1988. Exponentially Modified Gaussian functions - A
+good model for chromatographic peaks in isocratic HPLC? \emph{Chromatographia},
+/bold{26}: 285-296. \doi{10.1007/BF02268168}.
+}
+\seealso{
+\code{\link{find_peaks}}, \code{\link{fit_peaks}}
 }
 \author{
 Ethan Bass

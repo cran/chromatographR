@@ -3,8 +3,9 @@
 #' Standard pre-processing of response matrices, consisting of a time axis and
 #' a spectral axis (e.g. HPLC-DAD/UV data). For smooth data, like UV-VIS data,
 #' the size of the matrix can be reduced by interpolation. By default,
-#' the data are baseline-corrected in the time direction and smoothed in the 
-#' spectral dimension.
+#' the data are baseline-corrected in the time direction
+#' (\code{\link[ptw:baseline.corr]{baseline.corr}}) and smoothed in the 
+#' spectral dimension using cubic smoothing splines (\code{\link[stats:smooth.spline]{smooth.spline}}.
 #' 
 #' @import ptw
 #' @importFrom stats approx smooth.spline
@@ -34,8 +35,8 @@
 #' @param mc.cores How many cores to use for parallel processing. Defaults to 2.
 #' @param \dots Further optional arguments to
 #' \code{\link[ptw:baseline.corr]{baseline.corr}}.
-#' @return The function returns the preprocessed data matrix, with rownames and
-#' colnames indicating the time points and wavelengths, respectively.
+#' @return The function returns the preprocessed data matrix, with row names and
+#' column names indicating the time points and wavelengths, respectively.
 #' @author Ethan Bass
 #' @note Adapted from
 #' \href{https://github.com/rwehrens/alsace/blob/master/R/preprocess.R}{preprocess}
@@ -60,11 +61,13 @@ preprocess <- function(X, dim1, ## time axis
                           dim2, ## spectral axis
                           remove.time.baseline = TRUE,
                           spec.smooth = TRUE,
-                          maxI, parallel = TRUE, 
+                          maxI, parallel, 
                           interpolate_rows = TRUE,
                           interpolate_cols = TRUE,
                           mc.cores=2, ...){
-  if (parallel & .Platform$OS.type == "windows"){
+  if (missing(parallel)){
+    parallel <- .Platform$OS.type != "windows"
+  } else if (parallel & .Platform$OS.type == "windows"){
     parallel <- FALSE
     warning("Parallel processing is not currently available on Windows.")
   }
@@ -120,7 +123,6 @@ preprocess <- function(X, dim1, ## time axis
     if (return_matrix){
       X[[1]]
     } else X
-      
 }
 
 #' @noRd
@@ -135,6 +137,8 @@ preprocess_matrix <- function(X,
                               ...) {
   if (!is.matrix(X))
     stop("X should be a matrix!")
+  metadata <- attributes(X)
+  metadata[c("dimnames", "names", "row.names", "dim", "class", "levels")] <- NULL
   ## possibly resize matrix to a lower dimension - faster, noise averaging
   if (interpolate_rows){
     if (length(tpoints <- as.numeric(rownames(X))) == 0)
@@ -163,7 +167,7 @@ preprocess_matrix <- function(X,
     X[X < 0] <- 0
   if (!missing(maxI))
     X <- maxI * X / max(X)
-  
   dimnames(X) <- list(dim1, dim2)
+  attributes(X) <- c(attributes(X), metadata)
   X
 }

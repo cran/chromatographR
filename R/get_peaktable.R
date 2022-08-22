@@ -76,9 +76,9 @@
 #' function in the alsace package by Ron Wehrens.
 #' @md
 #' @references
-#' * Broeckling, C. D., F. A. Afsar, S. Neumann, A. Ben-Hur, and J.
-#' E. Prenni. 2014. RAMClust: A Novel Feature Clustering Method Enables
-#' Spectral-Matching-Based Annotation for Metabolomics Data. \emph{Anal. Chem.}
+#' * Broeckling, C. D., Afsar F.A., Neumann S., Ben-Hur A., and Prenni J.E. 2014.
+#' RAMClust: A Novel Feature Clustering Method Enables Spectral-Matching-Based
+#' Annotation for Metabolomics Data. \emph{Anal. Chem.}
 #' \bold{86}:6812-6817. \doi{10.1021/ac501530d}
 #' * Wehrens, R., Carvalho, E., Fraser, P.D. 2015. Metabolite profiling in
 #' LC–DAD using multivariate curve resolution: the alsace package for R. \emph{
@@ -102,9 +102,10 @@ get_peaktable <- function(peak_list, chrom_list, response = c("area", "height"),
   rt <- ifelse(use.cor, "rt.cor", "rt")
   if (!inherits(peak_list,"peak_list"))
     stop("Peak list must be of the associated class.")
-  if (missing(chrom_list)){
-    chrom_list <- try(get(attr(peak_list, "chrom_list")))
-    if (inherits(chrom_list, "try-error")) stop("Chromatograms not found")
+  if (clust == "sp.rt"){
+    if (missing(chrom_list)){
+      chrom_list <- get_chrom_list(peak_list)
+    } else get_chrom_list(peak_list, chrom_list)
   }
   ncomp <- length(peak_list[[1]]) ## all elements should have the same length
   if (plot_it) {
@@ -331,15 +332,16 @@ plot.peak_table <- function(x, ..., loc, chrom_list, what="peak",
   }
   if (box_plot == T){
     if (!is.data.frame(x$sample_meta)){
-      stop("Metadata must be attached to peak table to make mirror plot.")
+      stop("Attach metadata to peak_table to make mirror plot.")
     }
     if (is.null(vars)){
-      stop("Must provide independent variable or variables for boxplot.")
+      stop("Must provide independent variable or variables (`var`) for boxplot.")
     }
-    if (what!="peak"){
+    if (what != "peak"){
       stop("A peak name must be provided to `loc` to produce a boxplot.")
     }
-    boxplot(as.formula(paste("x[['tab']][,loc]",vars,sep="~")), data = x$sample_meta,
+    boxplot(as.formula(paste("x[['tab']][,loc]", vars, sep="~")),
+            data = x$sample_meta,
             main = paste(loc, '\n', 'RT = ', round(x$pk_meta['rt', loc],2)),
             ylab="abs", xlab="", ...)
   }
@@ -406,9 +408,8 @@ mirror_plot <- function(peak_table, chrom_list, lambdas, var, subset = NULL,
     stop(paste(var, "not found in sample meta-data."))
   }
   if (missing(chrom_list)){
-    chrom_list <- try(get(peak_table$args["chrom_list"]))
-    if (inherits(chrom_list, "try-error")) stop("Chromatograms not found!")
-  }
+    chrom_list <- get_chrom_list(peak_table)
+  } else get_chrom_list(peak_table, chrom_list)
   new.ts <- round(as.numeric(rownames(chrom_list[[1]])),2)
   fac <- factor(meta[,var])
   if (is.null(subset) & length(levels(fac)) > 2)
@@ -432,7 +433,9 @@ mirror_plot <- function(peak_table, chrom_list, lambdas, var, subset = NULL,
     legend_txt <- c(trt1,trt2)
   if (is.null(xlim))
     xlim <- c(head(new.ts,1),tail(new.ts,1))
-  y_max <- max(sapply(chrom_list, function(x) max(x[,as.character(min(as.numeric(lambdas)))], na.rm=TRUE)))
+  y_max <- max(sapply(chrom_list, function(x){
+    max(x[,as.character(min(as.numeric(lambdas)))], na.rm=TRUE)
+    }))
   if (mirror){
     if (is.null(ylim))
       ylim <- c(-y_max, y_max)
