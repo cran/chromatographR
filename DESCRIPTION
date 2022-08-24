@@ -1,7 +1,7 @@
 Type: Package
 Package: chromatographR
 Title: Chromatographic Data Analysis Toolset
-Version: 0.4.3
+Version: 0.4.4
 Authors@R: 
     person("Ethan", "Bass", , "ethanbass@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-6175-6739"))
@@ -38,7 +38,7 @@ LazyData: true
 LazyDataCompression: xz
 RoxygenNote: 7.2.1
 NeedsCompilation: no
-Packaged: 2022-08-22 15:51:16 UTC; ethanbass
+Packaged: 2022-08-23 14:07:58 UTC; ethanbass
 Author: Ethan Bass [aut, cre] (<https://orcid.org/0000-0002-6175-6739>)
 Repository: CRAN
-Date/Publication: 2022-08-22 19:00:05 UTC
+Date/Publication: 2022-08-24 06:50:08 UTC
